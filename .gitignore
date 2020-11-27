@@ -1,2 +1,5 @@
 __pycache__
 Projeto*
+*.ipynb
+env.txt
+data_equity_file*
