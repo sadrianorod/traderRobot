@@ -39,7 +39,7 @@ class DecisionTreeAgent(BackTestInterface):
         pass
 
     def trade(self,bts,dbars):
-            assets=['VALE3']
+            assets=['VALE3'] #só utiliza 1 ação nessa implementação
             orders=[]
             timeFrame=10 # it takes into account the last 10 bars
             horizon=1 # it project the closing price for next bar
@@ -62,11 +62,9 @@ class DecisionTreeAgent(BackTestInterface):
                 p=self.clf.predict([X[-1]])
                 if p==2:
                     #buy it
-                    print("Free Shares: ",free_shares)
                     order=self.buy_order(asset,free_shares)
                 elif p==0:
                     #sell it
-                    print("Current Shares: ",curr_shares)
                     order=self.sell_order(asset,curr_shares)
                 else:
                     order=None
