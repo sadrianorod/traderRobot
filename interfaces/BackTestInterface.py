@@ -1,4 +1,4 @@
-from models.ModelInterface import ModelInterface
+from interfaces.ModelInterface import ModelInterface
 from setup import PRE_START_DATE,START_DATE,END_DATE,START_MONEY,LISTED_COMPANIES_NAMES,RESULTS_FILE
 from utils import calcReturns
 
@@ -10,7 +10,7 @@ class BackTestInterface(ModelInterface):
     
     def setup(self,dbars): raise NotImplementedError("Not Implemented Error: setup was not implemented.")
 
-    def trade(self,dbars): raise NotImplementedError("Not Implemented Error: trade was not implemented.")
+    def trade(self,bts,dbars): raise NotImplementedError("Not Implemented Error: trade was not implemented.")
 
     def ending(self,dbars): raise NotImplementedError("Not Implemented Error: ending was not implemented.")
 

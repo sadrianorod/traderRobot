@@ -109,7 +109,7 @@ def getShares(symbolId):
      you need to inform the target asset. The default target assets is B3 stock.
      It there is no tick for 60 seconds, the market is considered closed!
 """
-def isMarketOpen(asset='B3SA3'):
+def isMarketOpen(asset='VALE3'):
   if not connected:
     print("In order to use this function, you must be connected to B3. Use function connect()")
     return
@@ -120,6 +120,7 @@ def isMarketOpen(asset='B3SA3'):
   #      else:
   #          return False
   #  return False
+
   t_secs=mt5.symbol_info_tick(asset).time # time in seconds
   now_dt=datetime.now(etctz)+timedelta(hours=-3)
   last_tick_dt=datetime.fromtimestamp(t_secs,etctz)

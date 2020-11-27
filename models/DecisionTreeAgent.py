@@ -1,6 +1,6 @@
 from sklearn import tree
 from sklearn.preprocessing import KBinsDiscretizer
-from models.BackTestInterface import BackTestInterface
+from interfaces.BackTestInterface import BackTestInterface
 
 class DecisionTreeAgent(BackTestInterface):
 

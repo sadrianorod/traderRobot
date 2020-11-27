@@ -1,4 +1,4 @@
-import pandas as pd
+from mt5b3 import pd
 from setup import USEFUL_COLUMNS_NAMES,LISTED_COMPANIES_NAMES,PRICE_COLUMN_NAME,DATE_COLUMN_NAME,TIME_COLUMN_NAME
 from functools import reduce
 
@@ -20,8 +20,6 @@ def filter_useful_dataframe_columns(dataframe : pd.DataFrame, useful_columns: li
 
 def calcReturns(serie):
     x=[]
-    #print('calcRetursn')
     for i in range(len(serie)-1): # calculates the serie of returns
         x.append(serie[i+1]/serie[i]-1)
-        #print(x[i])
     return x
