@@ -1,5 +1,7 @@
 from models.DecisionTreeAgent import DecisionTreeAgent
 from models.DummyAgent import DummyAgent
+from models.DQNAgent import DQNAgent
+import argparse
 
 #print(generate_listed_companies_dataframe(path_to_datasets_folder = './datasets/'))
 
@@ -8,7 +10,30 @@ from models.DummyAgent import DummyAgent
 # print(trader.get_dict_of_metrics())
 
 #Operations
-trader = DummyAgent()
-trader._run_operations()
+#trader = DummyAgent()
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--agent', type=str, required=True, help='either an agent type: "dqn", "dummy" or "decisionTree')
+    parser.add_argument('-m', '--mode', type=str, required=True, help='either "train" or "makeMeRich"')
+    parser.add_argument('-w', '--weights', type=str, help='a trained model weights')
+    args = parser.parse_args()
+
+    make_dir('weights')
+
+    # build trader
+    if args.agent == 'dummy':
+        trader = DummyAgent()
+    elif args.agent = 'decisionTree':
+        trader = DecisionTreeAgent()
+    elif args.agent = 'dqn':
+        trade = DQNAgent()
+
+    trade._run_operations()
+   
+
+#trader = DQNAgent()
+#trader._run_operations()
 
 
