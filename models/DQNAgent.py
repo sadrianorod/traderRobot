@@ -7,7 +7,7 @@ import numpy as np
 import itertools
 from gym import spaces
 from gym.utils import seeding
-from agent import DQNAgent
+from models import DQNAgent
 from utils import get_scaler, get_data
 
 from setup import START_MONEY
@@ -20,7 +20,7 @@ class DQNAgent(BackTestInterface):
         
 
     def setup(self,dbars):
-       """  assets=['VALE3']
+        """  assets=['VALE3']
         if len(assets)!=1:
             print('Error, this trader is supposed to deal with just one asset')
             return None
@@ -48,12 +48,12 @@ class DQNAgent(BackTestInterface):
         ## Entao, aqui eu preciso de uma função que popule a variavel train_data baseado em dbars
         ## tipo, agora eu fiz uma que pega as informações dos csv salvos, mas a gente vai querer
         ## uma que use aquela starDate e Predate EU ACHO.
-        train_data = np.around(get_data())
-
+        train_data = np.around(get_data(dbars))
+        
         # data
         self.stock_price_history = np.around(train_data) # round up to integer to reduce state space
         self.n_stock, self.n_step = self.stock_price_history.shape
-
+        print(self.n_stock,self.n_step)
 
         # instance attributes
         self.init_invest = START_MONEY
@@ -67,11 +67,10 @@ class DQNAgent(BackTestInterface):
 
         # observation space: give estimates in order to sample and build scaler
         stock_max_price = self.stock_price_history.max(axis=1)
-        stock_range = [[0, init_invest * 2 // mx] for mx in stock_max_price]
+        stock_range = [[0, self.init_invest * 2 // mx] for mx in stock_max_price]
         price_range = [[0, mx] for mx in stock_max_price]
-        cash_in_hand_range = [[0, init_invest * 2]]
+        cash_in_hand_range = [[0, self.init_invest * 2]]
         self.observation_space = spaces.MultiDiscrete(stock_range + price_range + cash_in_hand_range)
-
         # seed and start
         self.seed()
         self.reset()

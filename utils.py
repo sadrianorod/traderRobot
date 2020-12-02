@@ -32,15 +32,18 @@ def make_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def get_data(col='close'):
+def get_data(dbars):
     """ Only for the close col """
-    bbas3 = pd.read_csv('dataset/BBAS3.csv', usecols=[col])
-    bbdc4 = pd.read_csv('dataset/BBDC4.csv', usecols=[col])
-    itub4 = pd.read_csv('dataset/ITUB4.csv', usecols=[col])
-    petr4 = pd.read_csv('dataset/PETR4.csv', usecols=[col])
-    vale3 = pd.read_csv('dataset/VALE3.csv', usecols=[col])
-    
-    return np.array([bbas3[col], bbdc4[col], itub4[col], petr4[col], vale3[col]])
+    # bbas3 = pd.read_csv('./datasets/BBAS3.csv', usecols=[col])
+    # bbdc4 = pd.read_csv('./datasets/BBDC4.csv', usecols=[col])
+    # itub4 = pd.read_csv('./datasets/ITUB4.csv', usecols=[col])
+    # petr4 = pd.read_csv('./datasets/PETR4.csv', usecols=[col])
+    # vale3 = pd.read_csv('./datasets/VALE3.csv', usecols=[col])
+    # for asset,df in dbars.items():
+    # df = generate_listed_companies_dataframe('./datasets/').drop(columns=[TIME_COLUMN_NAME,DATE_COLUMN_NAME])
+    # return np.array([bbas3[col], bbdc4[col], itub4[col], petr4[col], vale3[col]])
+    df = reduce(lambda *args : pd.concat([args[0][['close']],args[1][['close']]],axis = 1),dbars.values())
+    return df.T.to_numpy()
 
 def get_scaler(stock_price_history, init_invest):
     """ Takes a env and returns a scaler for its observation space """

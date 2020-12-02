@@ -2,7 +2,7 @@ from models.DecisionTreeAgent import DecisionTreeAgent
 from models.DummyAgent import DummyAgent
 from models.DQNAgent import DQNAgent
 import argparse
-
+from utils import make_dir
 #print(generate_listed_companies_dataframe(path_to_datasets_folder = './datasets/'))
 
 #Backtest
@@ -25,12 +25,12 @@ if __name__ == '__main__':
     # build trader
     if args.agent == 'dummy':
         trader = DummyAgent()
-    elif args.agent = 'decisionTree':
+    elif args.agent == 'decisionTree':
         trader = DecisionTreeAgent()
-    elif args.agent = 'dqn':
-        trade = DQNAgent()
+    elif args.agent == 'dqn':
+        trader = DQNAgent()
 
-    trade._run_operations()
+    trader._run_operations()
    
 
 #trader = DQNAgent()
