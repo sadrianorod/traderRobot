@@ -21,7 +21,7 @@ class BackTestInterface(ModelInterface):
     def get_affordable_shares(self,dbars,asset,money = None): return self.b3.backtest.getAfforShares(self.bts,dbars,assetId=asset,money=money)
 
     def get_dict_of_metrics(self):
-        dataframe = self._run_operations()
+        dataframe = self._run_backtest()
         serie = dataframe['equity']
         serie= calcReturns(serie)
 
@@ -33,7 +33,7 @@ class BackTestInterface(ModelInterface):
         }
 
 
-    def _run_operations(self, print_evaluation = False):
+    def _run_backtest(self, print_evaluation = False):
         dataframe = self.b3.backtest.run(self,self.bts)
         if print_evaluation: self.b3.backtest.evaluate(dataframe)
         return dataframe
