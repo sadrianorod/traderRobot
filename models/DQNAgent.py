@@ -5,9 +5,10 @@ from interfaces.BackTestInterface import BackTestInterface
 import gym
 import numpy as np
 import itertools
+import pickle
 from gym import spaces
 from gym.utils import seeding
-from models import DQNAgent
+from DQN.agent import QAgent
 from utils import get_scaler, get_data
 
 from setup import START_MONEY
@@ -77,8 +78,8 @@ class DQNAgent(BackTestInterface):
 
         state_size = self.observation_space.shape
         action_size = self.action_space.n
-        self.agent = DQNAgent(state_size, action_size)
-        self.scaler = get_scaler(env)
+        self.agent = QAgent(state_size, action_size)
+        self.scaler = get_scaler(self.stock_price_history, self.init_invest, self.n_stock)
 
         # training parameters
         self.episode = 2000
@@ -91,14 +92,14 @@ class DQNAgent(BackTestInterface):
             state = self.reset()
             state = self.scaler.transform([state])
             for time in range(self.n_step):
-                action = agent.act(state)
+                action = self.agent.act(state)
                 next_state, reward, done, info = self.step(action)
                 next_state = self.scaler.transform([next_state])
                 self.agent.remember(state, action, reward, next_state, done)
                 state = next_state
                 if done:
                     print("episode: {}/{}, episode end value: {}".format(
-                    e + 1, args.episode, info['cur_val']))
+                    e + 1, self.episode, info['cur_val']))
                     portfolio_value.append(info['cur_val']) # append episode end portfolio value
                     break
                 if len(self.agent.memory) > self.batch_size:
@@ -107,7 +108,7 @@ class DQNAgent(BackTestInterface):
                 self.agent.save('weights/{}-dqn.h5'.format(timestamp))
 
         # save portfolio value history to disk
-        with open('portfolio_val/{}-{}.p'.format(timestamp, args.mode), 'wb') as fp:
+        with open('portfolio_val/{}-{}.p'.format(timestamp, "train"), 'wb') as fp:
             pickle.dump(portfolio_value, fp)
 
     def ending(self,dbars):
@@ -162,7 +163,7 @@ class DQNAgent(BackTestInterface):
 
     def step(self, action):
         assert self.action_space.contains(action)
-        reward = self.get_reward() 
+        reward, cur_val = self.get_reward(action)
         done = self.cur_step == self.n_step - 1
         info = {'cur_val': cur_val}
         return self.get_obs(), reward, done, info
@@ -179,7 +180,7 @@ class DQNAgent(BackTestInterface):
     def get_val(self):
         return np.sum(self.stock_owned * self.stock_price) + self.cash_in_hand 
     
-    def get_reward(self):
+    def get_reward(self, action):
         prev_val = self.get_val()
         self.cur_step += 1
         self.stock_price = self.stock_price_history[:, self.cur_step] # update price
@@ -187,4 +188,4 @@ class DQNAgent(BackTestInterface):
         cur_val = self.get_val()
         reward = cur_val - prev_val
 
-        return reward
+        return reward, cur_val

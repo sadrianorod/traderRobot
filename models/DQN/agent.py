@@ -4,7 +4,7 @@ import numpy as np
 from model import mlp
 
 
-class DQNAgent(object):
+class QAgent(object):
   def __init__(self, state_size, action_size):
     self.state_size = state_size
     self.action_size = action_size

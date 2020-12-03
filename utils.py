@@ -45,9 +45,9 @@ def get_data(dbars):
     df = reduce(lambda *args : pd.concat([args[0][['close']],args[1][['close']]],axis = 1),dbars.values())
     return df.T.to_numpy()
 
-def get_scaler(stock_price_history, init_invest):
+def get_scaler(stock_price_history, init_invest, n_stock):
     """ Takes a env and returns a scaler for its observation space """
-    low = [0] * (env.n_stock * 2 + 1)
+    low = [0] * (n_stock * 2 + 1)
 
     high = []
     max_price = stock_price_history.max(axis=1)
