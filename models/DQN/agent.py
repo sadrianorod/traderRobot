@@ -1,7 +1,7 @@
 from collections import deque
 import random
 import numpy as np
-from model import mlp
+from models.DQN.model import mlp
 
 
 class QAgent(object):

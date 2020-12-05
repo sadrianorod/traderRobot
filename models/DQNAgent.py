@@ -8,7 +8,7 @@ import itertools
 import pickle
 from gym import spaces
 from gym.utils import seeding
-from DQN.agent import QAgent
+from models.DQN.agent import QAgent
 from utils import get_scaler, get_data
 
 from setup import START_MONEY, LISTED_COMPANIES_NAMES
