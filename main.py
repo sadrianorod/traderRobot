@@ -16,8 +16,8 @@ from utils import make_dir
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--agent', type=str, required=True, help='either an agent type: "dqn", "dummy" or "decisionTree')
-    parser.add_argument('-m', '--mode', type=str, required=True, help='either "train" or "makeMeRich"')
-    parser.add_argument('-w', '--weights', type=str, help='a trained model weights')
+    # parser.add_argument('-m', '--mode', type=str, required=True, help='either "train" or "makeMeRich"')
+    # parser.add_argument('-w', '--weights', type=str, help='a trained model weights')
     args = parser.parse_args()
 
     make_dir('weights')
@@ -30,6 +30,7 @@ if __name__ == '__main__':
     elif args.agent == 'dqn':
         trader = DQNAgent()
 
+    print("Bora")
     trader._run_operations()
    
 

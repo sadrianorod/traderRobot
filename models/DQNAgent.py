@@ -21,6 +21,7 @@ class DQNAgent(BackTestInterface):
         
 
     def setup(self, dbars):
+        print("Setup")
         # data
         train_data = np.around(get_data(dbars))
         self.stock_price_history = np.around(train_data) # round up to integer to reduce state space
@@ -81,6 +82,7 @@ class DQNAgent(BackTestInterface):
         pass
 
     def trade(self, bts, dbars):
+        # print("Tradando for real")
         self.state = self.update_state(bts, dbars)
         self.state = self.scaler.transform([self.state])
         action = self.agent.act(self.state)
@@ -102,10 +104,11 @@ class DQNAgent(BackTestInterface):
             order=self.sell_order(asset,curr_shares)
             orders.append(order)
         
-        money=self.get_current_money()/len(buy_assets)
-        for asset in buy_assets:
-            order=self.buy_order(asset,money)
-            orders.append(order)
+        if len(buy_assets) != 0:
+            money=self.get_current_money()/len(buy_assets)
+            for asset in buy_assets:
+                order=self.buy_order(asset,money)
+                orders.append(order)
 
         reward = self.get_reward()
         self.agent.remember(self.last_state, action, reward, self.state, False)
@@ -179,13 +182,14 @@ class DQNAgent(BackTestInterface):
             elif a == 2:
                 buy_assets.append(i)
         
-        money=self.cash_in_hand()/len(buy_assets)
-        for asset in buy_assets:
-            ## TODO: tem que conferir como que o get_affor_shares funciona
-            if self.stock_price[asset] < money:
-                n_shares = int ( money/self.stock_price[asset] )
-                self.stock_owned[asset] += n_shares
-                self.cash_in_hand -= self.stock_price[asset] * n_shares
+        if len(buy_assets):
+            money=self.cash_in_hand/len(buy_assets)
+            for asset in buy_assets:
+                ## TODO: tem que conferir como que o get_affor_shares funciona
+                if self.stock_price[asset] < money:
+                    n_shares = int ( money/self.stock_price[asset] )
+                    self.stock_owned[asset] += n_shares
+                    self.cash_in_hand -= self.stock_price[asset] * n_shares
         
         for asset in sell_assets:
             # sell it all
