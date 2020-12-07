@@ -65,15 +65,15 @@ class PPOTrader:
             environment=trainingEnvironment,  # alternatively: states, actions, (max_episode_timesteps)
             batch_size=64,
             network="auto",
-            ## exploration=?,
-            reward_estimation=dict(
-                horizon=20
-                # discount=?,
-            ),
+            ## Optimization
             learning_rate=3e-4,
-            # likelihood_ratio_clipping=?,
             # subsampling_fraction=?,
             # multi_step=?
+            ## Reward estimation
+            # discount=?,
+            # likelihood_ratio_clipping=?,
+            ## Exploration
+            # exploration=?,
             summarizer=dict(
                 directory='./tensorboard/'
             )
@@ -98,8 +98,7 @@ class PPOTrader:
         state = TradingEnvironment.state(currentMoney, currentShares, currentPrices, nassets)
         ## Decide action!
         actions, self.internal_state = self.agent.act(
-            None,
-            # state, 
+            state, 
             internals=self.internal_state,
             independent=True,   # No reward or anything, just tell me what to do
             deterministic=True  # Don't explore, just exploit
@@ -107,22 +106,22 @@ class PPOTrader:
         buying, _ = zip(*list(filter(lambda _, value: value == TradingEnvironment.BUY_ACTION, actions.items())))
         selling, _ = zip(*list(filter(lambda _, value: value == TradingEnvironment.SELL_ACTION, actions.items())))
         orders = []
-        # for asset, action in actions.items():
-        #     ## Buying/Selling
-        #     ##
-        #     ## -> Distribute resources between assets being bought
-        #     ## 
-        #     capitalPerAsset = currentMoney / nassets
-        #     if np.fabs(capitalPerAsset) >= 1.0: ## Threshold to enable buying
-        #         for asset in buying:
-        #             buyingStocksQty = int(self._currentPrices[asset] / capitalPerAsset)
-        #             if buyingStocksQty * self._currentPrices[asset] > capitalPerAsset: buyingStocksQty -= 1
-        #             moneySpent = buyingStocksQty * self._currentPrices[asset]
-        #             self._agentStocks[asset] += buyingStocksQty
-        #             currentMoney -= moneySpent
-        #             if self._agentCash < 1.0:
-        #                 # Money all spent. Early break.
-        #                 break
+        for asset, action in actions.items():
+            ## Buying/Selling
+            ##
+            ## -> Distribute resources between assets being bought
+            ## 
+            capitalPerAsset = currentMoney / nassets
+            if np.fabs(capitalPerAsset) >= 1.0: ## Threshold to enable buying
+                for asset in buying:
+                    buyingStocksQty = int(self._currentPrices[asset] / capitalPerAsset)
+                    if buyingStocksQty * self._currentPrices[asset] > capitalPerAsset: buyingStocksQty -= 1
+                    moneySpent = buyingStocksQty * self._currentPrices[asset]
+                    self._agentStocks[asset] += buyingStocksQty
+                    currentMoney -= moneySpent
+                    if self._agentCash < 1.0:
+                        # Money all spent. Early break.
+                        break
         #     ##
         #     ## -> Sell all stocks owned
         #     ## 
