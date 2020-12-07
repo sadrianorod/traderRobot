@@ -114,12 +114,12 @@ class PPOTrader:
             capitalPerAsset = currentMoney / nassets
             if np.fabs(capitalPerAsset) >= 1.0: ## Threshold to enable buying
                 for asset in buying:
-                    buyingStocksQty = int(self._currentPrices[asset] / capitalPerAsset)
-                    if buyingStocksQty * self._currentPrices[asset] > capitalPerAsset: buyingStocksQty -= 1
-                    moneySpent = buyingStocksQty * self._currentPrices[asset]
-                    self._agentStocks[asset] += buyingStocksQty
+                    buyingStocksQty = int(currentPrices[asset] / capitalPerAsset)
+                    if buyingStocksQty * currentPrices[asset] > capitalPerAsset: buyingStocksQty -= 1
+                    moneySpent = buyingStocksQty * currentPrices[asset]
+                    currentShares[asset] += buyingStocksQty
                     currentMoney -= moneySpent
-                    if self._agentCash < 1.0:
+                    if currentMoney < 1.0:
                         # Money all spent. Early break.
                         break
         #     ##
@@ -208,7 +208,7 @@ class TradingEnvironment(Environment):
                 asset,
                 dict(
                     type='int',
-                    num_actions=3
+                    num_values=3
                 )
             ) for asset in range(self._nassets)
         )
@@ -224,6 +224,7 @@ class TradingEnvironment(Environment):
         """
         return dict(
             **{
+                ## TODO: This is wrong, it should be int
                 'stocks_'+LISTED_COMPANIES_NAMES[asset]: dict(type='float', min_value=0, max_value=(2*START_MONEY // self._minStockPrice[asset]))
                 for asset in range(self._nassets)
             },                            # 2.
