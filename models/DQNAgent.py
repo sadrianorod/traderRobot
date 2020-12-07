@@ -82,8 +82,9 @@ class DQNAgent(BackTestInterface):
         pass
 
     def trade(self, bts, dbars):
-        # print("Tradando for real")
+        print("Tradando for real")
         self.state = self.update_state(bts, dbars)
+        print("Estado atual:", self.state)
         self.state = self.scaler.transform([self.state])
         action = self.agent.act(self.state)
         action_vec = self.action_combo[action]
@@ -198,9 +199,20 @@ class DQNAgent(BackTestInterface):
 
 
     def update_state(self, bts, dbars):
-        ## Aqui tenho que atualizar baseado no bts e dbars o:
-        # self.stock own, que eh o vetor de assets que eu tenho [asset1, asset2, ..., asset5]
-        # self.stock_price, que eh o vetor do preço atual das assets agora [price1, ..., price5]
+        # update self.stock_owned = [asset1, asset2, ..., asset5]
+        current_shares = list()
+        for asset in LISTED_COMPANIES_NAMES:
+            current_shares.append(self.get_current_shares(asset))
+        self.stock_owned = current_shares
+
+        # update self.stock_price = [price1, ..., price5]
+        self.stock_price = self.get_current_stock_prices(dbars)
         self.cash_in_hand = self.get_current_money()
 
         return self.get_obs()
+
+    
+    def get_current_stock_prices(self, dbars):
+        stock_prices = np.around(get_data(dbars))
+        
+        return stock_prices[:, 0]
