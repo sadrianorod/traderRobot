@@ -88,7 +88,7 @@ class DQNAgent(BackTestInterface):
         self.state = self.scaler.transform([self.state])
         action = self.agent.act(self.state)
         action_vec = self.action_combo[action]
-
+        print("Acao a ser tomada:", action_vec)
 
         sell_assets = []
         buy_assets = []
@@ -108,7 +108,10 @@ class DQNAgent(BackTestInterface):
         if len(buy_assets) != 0:
             money=self.get_current_money()/len(buy_assets)
             for asset in buy_assets:
-                order=self.buy_order(asset,money)
+                #time = bts['curr']
+                # ta errado aqui. Eu tenho que mandar somente a linha "time" em dbars
+                afford_shares = self.get_affordable_shares(dbars, asset=asset, money=money)
+                order=self.buy_order(asset,afford_shares)
                 orders.append(order)
 
         reward = self.get_reward()
@@ -119,6 +122,7 @@ class DQNAgent(BackTestInterface):
                 self.agent.replay(self.batch_size)
 
         return orders   
+    
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -168,6 +172,7 @@ class DQNAgent(BackTestInterface):
         prev_val = np.sum(self.last_state[:5] * self.last_state[5:10]) + self.cash_in_hand 
 
         cur_val = self.get_val()
+        print("TOTAL:", cur_val)
         reward = cur_val - prev_val
 
         return reward
@@ -188,7 +193,9 @@ class DQNAgent(BackTestInterface):
             for asset in buy_assets:
                 ## TODO: tem que conferir como que o get_affor_shares funciona
                 if self.stock_price[asset] < money:
+                    # afford_shares = self.get_affordable_shares(assets[asset], money)
                     n_shares = int ( money/self.stock_price[asset] )
+                    # print("shares:", n_shares, ", afford:", afford_shares)
                     self.stock_owned[asset] += n_shares
                     self.cash_in_hand -= self.stock_price[asset] * n_shares
         
@@ -206,13 +213,13 @@ class DQNAgent(BackTestInterface):
         self.stock_owned = current_shares
 
         # update self.stock_price = [price1, ..., price5]
-        self.stock_price = self.get_current_stock_prices(dbars)
+        self.stock_price = self.get_current_stock_prices(dbars, bts['curr'])
         self.cash_in_hand = self.get_current_money()
 
         return self.get_obs()
 
     
-    def get_current_stock_prices(self, dbars):
+    def get_current_stock_prices(self, dbars, time):
         stock_prices = np.around(get_data(dbars))
         
-        return stock_prices[:, 0]
+        return stock_prices[:, time]
