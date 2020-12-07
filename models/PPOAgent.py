@@ -103,8 +103,9 @@ class PPOTrader:
             independent=True,   # No reward or anything, just tell me what to do
             deterministic=True  # Don't explore, just exploit
         )
-        buying, _ = zip(*list(filter(lambda _, value: value == TradingEnvironment.BUY_ACTION, actions.items())))
-        selling, _ = zip(*list(filter(lambda _, value: value == TradingEnvironment.SELL_ACTION, actions.items())))
+        
+        buying = [ int(asset) for asset, act in actions.items() if act == TradingEnvironment.BUY_ACTION ]
+        selling = [ int(asset) for asset, act in actions.items() if act == TradingEnvironment.SELL_ACTION ]
         orders = []
         for asset, action in actions.items():
             ## Buying/Selling
@@ -205,7 +206,7 @@ class TradingEnvironment(Environment):
         """
         return dict(
             (
-                asset,
+                str(asset),
                 dict(
                     type='int',
                     num_values=3
@@ -252,8 +253,8 @@ class TradingEnvironment(Environment):
             :actions: dict[int] -> {0,1,2}.
         """
         ## Buying/Selling
-        buying, _ = zip(*list(filter(lambda _, value: value == TradingEnvironment.BUY_ACTION, actions.items())))
-        selling, _ = zip(*list(filter(lambda _, value: value == TradingEnvironment.SELL_ACTION, actions.items())))
+        buying = [ int(asset) for asset, act in actions.items() if act == TradingEnvironment.BUY_ACTION ]
+        selling = [ int(asset) for asset, act in actions.items() if act == TradingEnvironment.SELL_ACTION ]
         ##
         ## -> Distribute resources between assets being bought
         ## 
