@@ -125,7 +125,7 @@ class PPOTrader:
             ## -> Sell all stocks owned
             ## 
             for asset in selling:
-                moneyReceived = self._agentStocks[asset] * self._currentPrices[asset]
+                moneyReceived = currentShares[asset] * currentPrices[asset]
                 # Clip this money if it makes me richer than the 2*START_MONEY limit.
                 moneyReceived = min(moneyReceived, 2*START_MONEY-self._agentCash)
                 agent += moneyReceived
@@ -204,6 +204,7 @@ class TradingEnvironment(Environment):
                 assetStr.lower(),
                 dict(
                     type='int',
+                    shape=(),
                     num_values=3
                 )
             ) for assetStr in LISTED_COMPANIES_NAMES
@@ -221,14 +222,14 @@ class TradingEnvironment(Environment):
         return dict(
             **{
                 ## TODO: This is wrong, it should be int
-                'stocks_'+LISTED_COMPANIES_NAMES[asset].lower(): dict(type='float', min_value=0, max_value=(2*START_MONEY // self._minStockPrice[asset]))
+                'stocks_'+LISTED_COMPANIES_NAMES[asset].lower(): dict(type='float', shape=(), min_value=0, max_value=(2*START_MONEY // self._minStockPrice[asset]))
                 for asset in range(self._nassets)
             },                            # 2.
             **{
-                'price_'+LISTED_COMPANIES_NAMES[asset].lower(): dict(type='float',min_value=0,max_value=self._maxStockPrice[asset])
+                'price_'+LISTED_COMPANIES_NAMES[asset].lower(): dict(type='float', shape=(), min_value=0,max_value=self._maxStockPrice[asset])
                 for asset in range(self._nassets)
             },                            # 3.
-            cash=dict(type='float', min_value=0, max_value=2*START_MONEY)      # 1.
+            cash=dict(type='float', shape=(), min_value=0, max_value=2*START_MONEY)      # 1.
         )
     
     def reset(self):
@@ -237,7 +238,7 @@ class TradingEnvironment(Environment):
             return new initial state.
         """
         self._agentCash = START_MONEY ## TODO: Should this really be the same at the start of every day?
-        self._agentStocks = np.zeros((self._nassets,1))
+        self._agentStocks = np.zeros(self._nassets)
         self._timestep = 0
         self._currentPrices = self._data[:,self._timestep]
         return TradingEnvironment.state(self._agentCash, self._agentStocks, self._currentPrices, self._nassets)
@@ -276,6 +277,7 @@ class TradingEnvironment(Environment):
             moneyReceived = min(moneyReceived, 2*START_MONEY-self._agentCash)
             self._agentCash += moneyReceived
             sellingReward += moneyReceived
+            self._agentStocks[asset] = 0
         ##
         ## -> Calculate reward
         ##
