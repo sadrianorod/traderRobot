@@ -70,7 +70,10 @@ def getAfforShares(bts,dbars,assetId,money=None):
     if money==None:
         money=bts['capital']
     bars=dbars[assetId]
-    price=bars['close'].iloc[-1]
+    time = bts['curr']
+   
+    price = bars['close'][time]
+    #price=bars['close'].iloc[-1]
     return b3.getAfforShares(assetId,money,price)
 
 def downloadData(bts):

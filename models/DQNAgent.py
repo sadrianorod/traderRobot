@@ -108,8 +108,6 @@ class DQNAgent(BackTestInterface):
         if len(buy_assets) != 0:
             money=self.get_current_money()/len(buy_assets)
             for asset in buy_assets:
-                #time = bts['curr']
-                # ta errado aqui. Eu tenho que mandar somente a linha "time" em dbars
                 afford_shares = self.get_affordable_shares(dbars, asset=asset, money=money)
                 order=self.buy_order(asset,afford_shares)
                 orders.append(order)
