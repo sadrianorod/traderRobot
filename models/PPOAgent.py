@@ -2,7 +2,8 @@ from interfaces.BackTestInterface import BackTestInterface
 from interfaces.OperationsInterface import OperationsInterface
 import mt5b3.mt5b3 as b3
 import numpy as np
-from tensorforce import Agent, Environment, PPOAgent, Runner
+from tensorforce import Agent, Environment, Runner
+from tensorforce.agents import PPOAgent
 from typing import Any
 
 from setup import START_MONEY, LISTED_COMPANIES_NAMES
@@ -91,8 +92,8 @@ class PPOTrader:
         self.internal_state = self.agent.initial_internals()
 
     def trade(self, conf: Any, dbars: Any) -> Any: # No idea what the types actually are
-        return []
-        # state = ... # TODO: Convert dbars into state dict
+        return [] ## TODO: WIP
+        # state = TradingEnvironment.state()
         ## Decide action!
         actions, self.internal_state = self.agent.act(
             None,
@@ -140,7 +141,22 @@ class TradingEnvironment(Environment):
         ## Reset state
         self.reset()
 
-    # TODO: Static utility to create a state representation
+    @staticmethod
+    def state(agentCash, agentStocks, stockPrices, nassets: int):
+        """
+            Build a dictionary of state from variables that make the state.
+        """
+        return dict(
+                ((
+                    'stocks_'+LISTED_COMPANIES_NAMES[asset],
+                    agentStocks[asset]
+                ) for asset in range(nassets)),
+                ((
+                    'price_'+LISTED_COMPANIES_NAMES[asset],
+                    stockPrices[asset]
+                ) for asset in range(nassets)),
+                cash=agentCash
+            )
 
     def max_episode_timesteps(self) -> int:
         """
@@ -206,17 +222,7 @@ class TradingEnvironment(Environment):
         self._agentStocks = np.zeros((self._nassets,1))
         self._timestep = 0
         self._currentPrices = self._data[:,self._timestep]
-        return dict(
-                ((
-                    'stocks_'+LISTED_COMPANIES_NAMES[asset],
-                    self._agentStocks[asset]
-                ) for asset in range(self._nassets)),
-                ((
-                    'price_'+LISTED_COMPANIES_NAMES[asset],
-                    self._currentPrices[asset]
-                ) for asset in range(self._nassets)),
-                cash=self._agentCash
-            )
+        return TradingEnvironment.state(self._agentCash, self._agentStocks, self._currentPrices, self._nassets)
 
     
     def execute(self, actions):
@@ -266,17 +272,7 @@ class TradingEnvironment(Environment):
         terminal = self._timestep >= self._totalAvailableSteps
         self._currentPrices = self._data[:,self._timestep] if not terminal else np.zeros((self._nassets,1))
         return (
-            dict(
-                ((
-                    'stocks_'+LISTED_COMPANIES_NAMES[asset],
-                    self._agentStocks[asset]
-                ) for asset in range(self._nassets)),
-                ((
-                    'price_'+LISTED_COMPANIES_NAMES[asset],
-                    self._currentPrices[asset]
-                ) for asset in range(self._nassets)),
-                cash=self._agentCash
-            ), 
+            TradingEnvironment.state(self._agentCash, self._agentStocks, self._currentPrices, self._nassets), 
             terminal,
             reward
         )
