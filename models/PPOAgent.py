@@ -63,10 +63,7 @@ class PPOTrader:
         self.agent = Agent.create(
             agent=PPOAgent,
             environment=trainingEnvironment,  # alternatively: states, actions, (max_episode_timesteps)
-            update=dict(
-                unit='timesteps', 
-                batch_size=64
-            ),
+            batch_size=64,
             network="auto",
             ## exploration=?,
             reward_estimation=dict(
@@ -97,7 +94,8 @@ class PPOTrader:
         nassets = len(conf['assets'])
         currentMoney = self.b3Agent.get_current_money()
         currentShares = [ self.b3Agent.get_current_shares(asset) for asset in conf['assets'] ]
-        # state = TradingEnvironment.state(currentMoney, currentShares, )
+        currentPrices = get_data(dbars)
+        state = TradingEnvironment.state(currentMoney, currentShares, currentPrices, nassets)
         ## Decide action!
         actions, self.internal_state = self.agent.act(
             None,
