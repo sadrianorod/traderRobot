@@ -41,7 +41,8 @@ class DQNAgent(BackTestInterface):
 
         # observation space: give estimates in order to sample and build scaler
         stock_max_price = self.stock_price_history.max(axis=1)
-        stock_range = [[0, self.init_invest * 2 // mx] for mx in stock_max_price]
+        stock_min_price = self.stock_price_history.min(axis=1)
+        stock_range = [[0, self.init_invest * 2 // minim] for minim in stock_min_price]
         price_range = [[0, mx] for mx in stock_max_price]
         cash_in_hand_range = [[0, self.init_invest * 2]]
         self.observation_space = spaces.MultiDiscrete(stock_range + price_range + cash_in_hand_range)
