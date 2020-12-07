@@ -207,7 +207,7 @@ class TradingEnvironment(Environment):
             (
                 asset,
                 dict(
-                    type=int,
+                    type='int',
                     num_actions=3
                 )
             ) for asset in range(self._nassets)
@@ -224,14 +224,14 @@ class TradingEnvironment(Environment):
         """
         return dict(
             **{
-                'stocks_'+LISTED_COMPANIES_NAMES[asset]: dict(type=float, min_value=0, max_value=(2*START_MONEY // self._minStockPrice[asset]))
+                'stocks_'+LISTED_COMPANIES_NAMES[asset]: dict(type='float', min_value=0, max_value=(2*START_MONEY // self._minStockPrice[asset]))
                 for asset in range(self._nassets)
             },                            # 2.
             **{
-                'price_'+LISTED_COMPANIES_NAMES[asset]: dict(type=float,min_value=0,max_value=self._maxStockPrice[asset])
+                'price_'+LISTED_COMPANIES_NAMES[asset]: dict(type='float',min_value=0,max_value=self._maxStockPrice[asset])
                 for asset in range(self._nassets)
             },                            # 3.
-            cash=dict(type=float, min_value=0, max_value=2*START_MONEY)      # 1.
+            cash=dict(type='float', min_value=0, max_value=2*START_MONEY)      # 1.
         )
     
     def reset(self):
