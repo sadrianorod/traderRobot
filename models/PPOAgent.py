@@ -9,6 +9,9 @@ from typing import Any
 from setup import START_MONEY, LISTED_COMPANIES_NAMES
 from utils import get_data
 
+## Trust me, you'll need this
+ASSET_INDEX = { company.lower(): i for i, company in enumerate(LISTED_COMPANIES_NAMES) }
+
 class PPOWolfOfWallstreet(OperationsInterface):
     """
         MONEY, MONEY, MONEY!
@@ -75,7 +78,7 @@ class PPOTrader:
             ## Exploration
             # exploration=?,
             summarizer=dict(
-                directory='./tensorboard/'
+                directory='./training/tensorboard/'
             )
         )
         self.agent.save(directory='model-numpy', format='checkpoint', append='episodes')
@@ -83,7 +86,7 @@ class PPOTrader:
         runner = Runner(self.agent, environment=trainingEnvironment)
         runner.run(
             num_episodes=10000,
-            save_best_agent='./best-agent/'
+            save_best_agent='./training/bestagent'
         )
         trainingEnvironment.close()
         ## Prepare agent for trading
@@ -104,35 +107,28 @@ class PPOTrader:
             deterministic=True  # Don't explore, just exploit
         )
         
-        buying = [ int(asset) for asset, act in actions.items() if act == TradingEnvironment.BUY_ACTION ]
-        selling = [ int(asset) for asset, act in actions.items() if act == TradingEnvironment.SELL_ACTION ]
+        buying = [ ASSET_INDEX[assetStr] for assetStr, act in actions.items() if act == TradingEnvironment.BUY_ACTION ]
+        selling = [ ASSET_INDEX[assetStr] for assetStr, act in actions.items() if act == TradingEnvironment.SELL_ACTION ]
         orders = []
-        for asset, action in actions.items():
-            ## Buying/Selling
+        capitalPerAsset = currentMoney / nassets
+        if np.fabs(capitalPerAsset) >= 1.0: ## Threshold to enable buying
+            for asset in buying:
+                buyingStocksQty = int(currentPrices[asset] / capitalPerAsset)
+                if buyingStocksQty * currentPrices[asset] > capitalPerAsset: buyingStocksQty -= 1
+                moneySpent = buyingStocksQty * currentPrices[asset]
+                currentShares[asset] += buyingStocksQty
+                currentMoney -= moneySpent
+                if currentMoney < 1.0:
+                    # Money all spent. Early break.
+                    break
             ##
-            ## -> Distribute resources between assets being bought
+            ## -> Sell all stocks owned
             ## 
-            capitalPerAsset = currentMoney / nassets
-            if np.fabs(capitalPerAsset) >= 1.0: ## Threshold to enable buying
-                for asset in buying:
-                    buyingStocksQty = int(currentPrices[asset] / capitalPerAsset)
-                    if buyingStocksQty * currentPrices[asset] > capitalPerAsset: buyingStocksQty -= 1
-                    moneySpent = buyingStocksQty * currentPrices[asset]
-                    currentShares[asset] += buyingStocksQty
-                    currentMoney -= moneySpent
-                    if currentMoney < 1.0:
-                        # Money all spent. Early break.
-                        break
-        #     ##
-        #     ## -> Sell all stocks owned
-        #     ## 
-        #     sellingReward = 0.0
-        #     for asset in selling:
-        #         moneyReceived = self._agentStocks[asset] * self._currentPrices[asset]
-        #         # Clip this money if it makes me richer than the 2*START_MONEY limit.
-        #         moneyReceived = min(moneyReceived, 2*START_MONEY-self._agentCash)
-        #         self._agentCash += moneyReceived
-        #         sellingReward += moneyReceived
+            for asset in selling:
+                moneyReceived = self._agentStocks[asset] * self._currentPrices[asset]
+                # Clip this money if it makes me richer than the 2*START_MONEY limit.
+                moneyReceived = min(moneyReceived, 2*START_MONEY-self._agentCash)
+                agent += moneyReceived
 
         return orders
 
@@ -164,7 +160,6 @@ class TradingEnvironment(Environment):
         ## _data shape: (number of assets, number of days * number of steps per day = total steps in the episode)
         ## We're using only close prices
         self._nassets, self._totalAvailableSteps = self._data.shape
-        # self._assetCodes = { LISTED_COMPANIES_NAMES[i]: i for i in range(self._nassets) }
         ## Minimum & Maximum stock prices: Useful for determining the state space range
         self._minStockPrice = self._data.min(axis=1)
         self._maxStockPrice = self._data.max(axis=1)
@@ -178,11 +173,11 @@ class TradingEnvironment(Environment):
         """
         return dict(
                 **{
-                    'stocks_'+LISTED_COMPANIES_NAMES[asset]: agentStocks[asset]
+                    'stocks_'+LISTED_COMPANIES_NAMES[asset].lower(): agentStocks[asset]
                     for asset in range(nassets)
                 },
                 **{
-                    'price_'+LISTED_COMPANIES_NAMES[asset]: stockPrices[asset]
+                    'price_'+LISTED_COMPANIES_NAMES[asset].lower(): stockPrices[asset]
                     for asset in range(nassets)
                 },
                 cash=agentCash
@@ -206,12 +201,12 @@ class TradingEnvironment(Environment):
         """
         return dict(
             (
-                str(asset),
+                assetStr.lower(),
                 dict(
                     type='int',
                     num_values=3
                 )
-            ) for asset in range(self._nassets)
+            ) for assetStr in LISTED_COMPANIES_NAMES
         )
 
     def states(self):
@@ -226,11 +221,11 @@ class TradingEnvironment(Environment):
         return dict(
             **{
                 ## TODO: This is wrong, it should be int
-                'stocks_'+LISTED_COMPANIES_NAMES[asset]: dict(type='float', min_value=0, max_value=(2*START_MONEY // self._minStockPrice[asset]))
+                'stocks_'+LISTED_COMPANIES_NAMES[asset].lower(): dict(type='float', min_value=0, max_value=(2*START_MONEY // self._minStockPrice[asset]))
                 for asset in range(self._nassets)
             },                            # 2.
             **{
-                'price_'+LISTED_COMPANIES_NAMES[asset]: dict(type='float',min_value=0,max_value=self._maxStockPrice[asset])
+                'price_'+LISTED_COMPANIES_NAMES[asset].lower(): dict(type='float',min_value=0,max_value=self._maxStockPrice[asset])
                 for asset in range(self._nassets)
             },                            # 3.
             cash=dict(type='float', min_value=0, max_value=2*START_MONEY)      # 1.
@@ -253,8 +248,8 @@ class TradingEnvironment(Environment):
             :actions: dict[int] -> {0,1,2}.
         """
         ## Buying/Selling
-        buying = [ int(asset) for asset, act in actions.items() if act == TradingEnvironment.BUY_ACTION ]
-        selling = [ int(asset) for asset, act in actions.items() if act == TradingEnvironment.SELL_ACTION ]
+        buying = [ ASSET_INDEX[assetStr] for assetStr, act in actions.items() if act == TradingEnvironment.BUY_ACTION ]
+        selling = [ ASSET_INDEX[assetStr] for assetStr, act in actions.items() if act == TradingEnvironment.SELL_ACTION ]
         ##
         ## -> Distribute resources between assets being bought
         ## 
