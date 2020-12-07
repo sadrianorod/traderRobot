@@ -15,7 +15,7 @@ class PPOWolfOfWallstreet(OperationsInterface):
     """
     def __init__(self) -> None:
         super().__init__()
-        self.trader = PPOTrader(self.b3, mode='operation')
+        self.trader = PPOTrader(self, self.b3, mode='operation')
 
     def setup(self, dbars):
         self.trader.setup(dbars)
@@ -32,7 +32,7 @@ class PPOChicken(BackTestInterface):
     """
     def __init__(self) -> None:
         super().__init__()
-        self.trader = PPOTrader(self.b3, mode='train')
+        self.trader = PPOTrader(self, self.b3, mode='train')
 
     def setup(self, dbars):
         self.trader.setup(dbars)
@@ -51,9 +51,10 @@ class PPOTrader:
     """
         Does the actual work.
     """
-    def __init__(self, b3Interface: b3, mode: str) -> None:
+    def __init__(self, b3Agent, b3Interface: b3, mode: str) -> None:
         self.mode = mode                   # Operation mode. No real use by now.
         self.b3Interface = b3Interface      # Actual trading API. A wrapper over MetaTrader library.
+        self.b3Agent = b3Agent              # The trading interface. This code is a fucking mess.
     
     def setup(self, dbars: Any) -> Any: # No idea what the types actually are
         trainingEnvironment = Environment.create(
@@ -93,7 +94,10 @@ class PPOTrader:
 
     def trade(self, conf: Any, dbars: Any) -> Any: # No idea what the types actually are
         return [] ## TODO: WIP
-        # state = TradingEnvironment.state()
+        nassets = len(conf['assets'])
+        currentMoney = self.b3Agent.get_current_money()
+        currentShares = [ self.b3Agent.get_current_shares(asset) for asset in conf['assets'] ]
+        # state = TradingEnvironment.state(currentMoney, currentShares, )
         ## Decide action!
         actions, self.internal_state = self.agent.act(
             None,
@@ -102,8 +106,36 @@ class PPOTrader:
             independent=True,   # No reward or anything, just tell me what to do
             deterministic=True  # Don't explore, just exploit
         )
+        buying, _ = zip(*list(filter(lambda _, value: value == TradingEnvironment.BUY_ACTION, actions.items())))
+        selling, _ = zip(*list(filter(lambda _, value: value == TradingEnvironment.SELL_ACTION, actions.items())))
         orders = []
-        ## TODO: Translate actions into orders
+        # for asset, action in actions.items():
+        #     ## Buying/Selling
+        #     ##
+        #     ## -> Distribute resources between assets being bought
+        #     ## 
+        #     capitalPerAsset = currentMoney / nassets
+        #     if np.fabs(capitalPerAsset) >= 1.0: ## Threshold to enable buying
+        #         for asset in buying:
+        #             buyingStocksQty = int(self._currentPrices[asset] / capitalPerAsset)
+        #             if buyingStocksQty * self._currentPrices[asset] > capitalPerAsset: buyingStocksQty -= 1
+        #             moneySpent = buyingStocksQty * self._currentPrices[asset]
+        #             self._agentStocks[asset] += buyingStocksQty
+        #             currentMoney -= moneySpent
+        #             if self._agentCash < 1.0:
+        #                 # Money all spent. Early break.
+        #                 break
+        #     ##
+        #     ## -> Sell all stocks owned
+        #     ## 
+        #     sellingReward = 0.0
+        #     for asset in selling:
+        #         moneyReceived = self._agentStocks[asset] * self._currentPrices[asset]
+        #         # Clip this money if it makes me richer than the 2*START_MONEY limit.
+        #         moneyReceived = min(moneyReceived, 2*START_MONEY-self._agentCash)
+        #         self._agentCash += moneyReceived
+        #         sellingReward += moneyReceived
+
         return orders
 
     def ending(self, dbars: Any) -> Any: # No idea what the types actually are
@@ -147,14 +179,14 @@ class TradingEnvironment(Environment):
             Build a dictionary of state from variables that make the state.
         """
         return dict(
-                ((
-                    'stocks_'+LISTED_COMPANIES_NAMES[asset],
-                    agentStocks[asset]
-                ) for asset in range(nassets)),
-                ((
-                    'price_'+LISTED_COMPANIES_NAMES[asset],
-                    stockPrices[asset]
-                ) for asset in range(nassets)),
+                **{
+                    'stocks_'+LISTED_COMPANIES_NAMES[asset]: agentStocks[asset]
+                    for asset in range(nassets)
+                },
+                **{
+                    'price_'+LISTED_COMPANIES_NAMES[asset]: stockPrices[asset]
+                    for asset in range(nassets)
+                },
                 cash=agentCash
             )
 
@@ -194,22 +226,14 @@ class TradingEnvironment(Environment):
             3- Price of the assets.
         """
         return dict(
-            ((
-                'stocks_'+LISTED_COMPANIES_NAMES[asset],
-                dict(
-                    type=float,
-                    min_value=0,
-                    max_value=2*START_MONEY // self._minStockPrice[asset]
-                )
-            ) for asset in range(self._nassets)),                            # 2.
-            ((
-                'price_'+LISTED_COMPANIES_NAMES[asset],
-                dict(
-                    type=float,
-                    min_value=0,
-                    max_value=self._maxStockPrice[asset]
-                )
-            ) for asset in range(self._nassets)),                            # 3.
+            **{
+                'stocks_'+LISTED_COMPANIES_NAMES[asset]: dict(type=float, min_value=0, max_value=(2*START_MONEY // self._minStockPrice[asset]))
+                for asset in range(self._nassets)
+            },                            # 2.
+            **{
+                'price_'+LISTED_COMPANIES_NAMES[asset]: dict(type=float,min_value=0,max_value=self._maxStockPrice[asset])
+                for asset in range(self._nassets)
+            },                            # 3.
             cash=dict(type=float, min_value=0, max_value=2*START_MONEY)      # 1.
         )
     
