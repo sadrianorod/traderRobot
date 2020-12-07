@@ -91,10 +91,12 @@ class PPOTrader:
         self.internal_state = self.agent.initial_internals()
 
     def trade(self, conf: Any, dbars: Any) -> Any: # No idea what the types actually are
-        state = ... # TODO: Convert dbars into state dict
+        return []
+        # state = ... # TODO: Convert dbars into state dict
         ## Decide action!
         actions, self.internal_state = self.agent.act(
-            state, 
+            None,
+            # state, 
             internals=self.internal_state,
             independent=True,   # No reward or anything, just tell me what to do
             deterministic=True  # Don't explore, just exploit
@@ -106,6 +108,10 @@ class PPOTrader:
     def ending(self, dbars: Any) -> Any: # No idea what the types actually are
         self.agent.save(directory='training', format='numpy', append='episodes')
         self.agent.close()
+
+####################
+#### PPO Trading Environment
+####################
 
 class TradingEnvironment(Environment):
     """
@@ -225,7 +231,7 @@ class TradingEnvironment(Environment):
         ## 
         capitalPerAsset = self._agentCash / self._nassets
         buyingReward = 0.0
-        if np.fabs(capitalPerAsset) >= 1.0: ## Threshold for enabling buying
+        if np.fabs(capitalPerAsset) >= 1.0: ## Threshold to enable buying
             for asset in buying:
                 buyingStocksQty = int(self._currentPrices[asset] / capitalPerAsset)
                 if buyingStocksQty * self._currentPrices[asset] > capitalPerAsset: buyingStocksQty -= 1
@@ -242,6 +248,8 @@ class TradingEnvironment(Environment):
         sellingReward = 0.0
         for asset in selling:
             moneyReceived = self._agentStocks[asset] * self._currentPrices[asset]
+            # Clip this money if it makes me richer than the 2*START_MONEY limit.
+            moneyReceived = min(moneyReceived, 2*START_MONEY-self._agentCash)
             self._agentCash += moneyReceived
             sellingReward += moneyReceived
         ##
