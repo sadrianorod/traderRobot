@@ -71,7 +71,6 @@ def getAfforShares(bts,dbars,assetId,money=None):
         money=bts['capital']
     bars=dbars[assetId]
     time = bts['curr']
-   
     price = bars['close'][time]
     #price=bars['close'].iloc[-1]
     return b3.getAfforShares(assetId,money,price)

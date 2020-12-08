@@ -116,8 +116,9 @@ class DQNAgentOperations(OperationsInterface):
             money=self.b3.getBalance()/len(buy_assets)
             for asset in buy_assets:
                 afford_shares = self.b3.getAfforShares(assetId=asset, money=money)
-                order=self.buy_order(asset,afford_shares)
-                orders.append(order)
+                if afford_shares > 0:
+                    order=self.buy_order(asset,afford_shares)
+                    orders.append(order)
 
         reward = self.get_reward(action_vec)
         self.agent.remember(self.last_state, action, reward, self.state, False)
@@ -274,7 +275,7 @@ class DQNAgentBacktest(BackTestInterface):
         #stock_range = [[0, self.init_invest * 2 // mx] for mx in stock_max_price]
         stock_range = [[0,1000],[0,1000],[0,1000],[0,1000],[0,1000]] 
         price_range = [[0, mx*100] for mx in stock_max_price]
-        cash_in_hand_range = [[0, self.init_invest * 200]]
+        cash_in_hand_range = [[0, self.init_invest * 2]]
         print(stock_range + price_range + cash_in_hand_range)
 
         self.observation_space = spaces.MultiDiscrete(stock_range + price_range + cash_in_hand_range)
