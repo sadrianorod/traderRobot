@@ -87,9 +87,10 @@ def startBckt(bts):
     assets=bts['assets']
     dbars=dict()
     for asset in assets:
-        dbars[asset]=b3.getBars(asset,bts['prestart'],bts['start'])
+        dbars[asset]=b3.getBars(asset,bts['prestart'],bts['start'], timeFrame=bts['type'])
+        print(dbars)
         bts['shares_'+asset]=0.0
-    bars=b3.getBars(assets[0],bts['start'],bts['end'])
+    bars=b3.getBars(assets[0],bts['start'],bts['end'], timeFrame=bts['type'])
     
     sim_dates=bars['time']
    
@@ -199,7 +200,7 @@ def getCurrBars(bts,dbars):
     for asset in assets:
         dbar=dbars[asset]
         #pega nova barra    
-        aux=b3.getBars(asset,sim_dates[bts['curr']],1,bts['type']) # pega uma barra! daily or intraday
+        aux=b3.getBars(asset,sim_dates[bts['curr']],1, timeFrame=bts['type']) # pega uma barra! daily or intraday
         if not aux is None and not aux.empty:
             dbar=dbar.iloc[1:,] #remove barra mais antiga
             #adiciona nova barra
