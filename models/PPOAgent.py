@@ -54,7 +54,7 @@ class PPOTrader:
         self.mode = mode                   # Operation mode. No real use by now.
         self.b3Interface = b3Interface      # Actual trading API. A wrapper over MetaTrader library.
     
-    def setup(self, dbars: Any) -> Any: # No idea what the types actually are
+    def setup(self, dbars: Any) -> Any:
         trainingEnvironment = Environment.create(
             environment=TradingEnvironment(dbars),
         )
@@ -90,7 +90,7 @@ class PPOTrader:
         ## Prepare agent for trading
         self.internal_state = self.agent.initial_internals()
 
-    def trade(self, conf: Any, dbars: Any) -> Any: # No idea what the types actually are
+    def trade(self, conf: Any, dbars: Any) -> Any: 
         state = ... # TODO: Convert dbars into state dict
         ## Decide action!
         actions, self.internal_state = self.agent.act(
@@ -103,7 +103,7 @@ class PPOTrader:
         ## TODO: Translate actions into orders
         return orders
 
-    def ending(self, dbars: Any) -> Any: # No idea what the types actually are
+    def ending(self, dbars: Any) -> Any:
         self.agent.save(directory='training', format='numpy', append='episodes')
         self.agent.close()
 
