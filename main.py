@@ -1,7 +1,7 @@
 from models.DecisionTreeAgent import DecisionTreeAgent
-from models.DummyAgent import DummyAgent
-from models.DQNAgent import DQNAgent
-from models.PPOAgent import PPOWolfOfWallstreet, PPOChicken
+from models.DummyAgent import DummyAgentBacktest,DummyAgentOperations
+from models.DQNAgent import DQNAgentBacktest,DQNAgentOperations
+#from models.PPOAgent import PPOWolfOfWallstreet, PPOChicken
 import argparse
 from utils import make_dir
 #print(generate_listed_companies_dataframe(path_to_datasets_folder = './datasets/'))
@@ -25,13 +25,20 @@ if __name__ == '__main__':
 
     # build trader
     if args.agent == 'dummy':
-        trader = DummyAgent()
+        if args.mode == 'train':
+            trader = DummyAgentBacktest()
+        else:
+            trader = DQNAgentOperations()
     elif args.agent == 'decisionTree':
         trader = DecisionTreeAgent()
     elif args.agent == 'dqn':
-        trader = DQNAgent()
-    elif args.agent == 'ppo':
-        trader = PPOWolfOfWallstreet() if args.mode == 'makeMeRich' else PPOChicken()
+        if args.mode =='train':
+            trader = DQNAgentBacktest()
+        else:
+            trader = DQNAgentOperations()
+
+    # elif args.agent == 'ppo':
+    #     trader = PPOWolfOfWallstreet() if args.mode == 'makeMeRich' else PPOChicken()
 
     print("Bora")
     trader._run_operations()
