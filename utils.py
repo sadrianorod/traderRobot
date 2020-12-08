@@ -35,6 +35,12 @@ def make_dir(directory):
 def get_data(dbars):
     """ Only for the close col """
     df = reduce(lambda *args : pd.concat([args[0][['close']],args[1][['close']]],axis = 1),dbars.values())
+    #print("AAAAAAAAa")
+    #print(df)
+    df.dropna(inplace=True)
+    #print(df*100)
+    # df = df*100
+    #print("AAEE")
     return df.T.to_numpy()
 
 def get_scaler(stock_price_history, init_invest, n_stock):

@@ -48,7 +48,7 @@ class BackTestInterface(ModelInterface):
         results_file=   RESULTS_FILE
         verbose     =   False 
         assets      =   LISTED_COMPANIES_NAMES
-        period      =   self.b3.DAILY 
+        period      =   self.b3.INTRADAY 
 
         bts         =   self.b3.backtest.set(assets,prestart,start,end,period,capital,results_file,verbose)
         
