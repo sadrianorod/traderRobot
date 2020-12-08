@@ -296,7 +296,7 @@ class DQNAgentBacktest(BackTestInterface):
         # here we train =]
         state = self.reset()
         state = self.scaler.transform([state])
-        for time in range(100):
+        for time in range(self.n_step):
             print("time:", time, "/", self.n_step)
             action = self.agent.act(state)
             next_state, reward, done = self.train_step(action)
