@@ -3,9 +3,6 @@ pandas==1.1.4
 numpy==1.19.0
 sklearn
 h5py
-tensorboard==2.4.0
-tensorboard-plugin-wit==1.7.0
 tensorflow==2.2.0
-Tensorforce==0.6.2
 keras==2.3.0
 gym==0.9.4
