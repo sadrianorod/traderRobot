@@ -10,4 +10,4 @@ Python 3.7.9. To install all the libraries, run `pip install -r requirements.txt
 `python main.py --a dqn -m train`.
 
 **To run it**, run 
-`python main.py --a dqn -m makeMeRich>`.
+`python main.py --a dqn -m makeMeRich`.
