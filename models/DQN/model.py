@@ -1,7 +1,6 @@
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.optimizers import Adam
-
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import Adam
 
 def mlp(n_obs, n_action, n_hidden_layer=1, n_neuron_per_layer=32,
         activation='relu', loss='mse'):

@@ -1,11 +1,11 @@
-from interfaces.OperationsInterface import OperationsInterface
+from interfaces.BackTestInterface import BackTestInterface
 import numpy.random as rand
 """
     Just use ModelInterface
     Implement trade, setup and ending
 """
 
-class DummyAgent(OperationsInterface):
+class DummyAgent(BackTestInterface):
     def __init__(self):
         super().__init__()
 
@@ -15,12 +15,11 @@ class DummyAgent(OperationsInterface):
     def trade(self,ops,dbars):
         orders=[] 
         assets= self.get_assets(dbars = dbars)
-        print(assets)
         for asset in assets:
             if rand.randint(2)==1:     
-                order=self.buy_order(asset=asset,volume=100)
+                order=self.buy_order(asset=asset,volume=1000)
             else:
-            	order=self.sell_order(asset=asset,volume=100)
+            	order=self.sell_order(asset=asset,volume=1000)
             orders.append(order)
         return orders
     

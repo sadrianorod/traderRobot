@@ -47,6 +47,7 @@ class DQNAgent(BackTestInterface):
         price_range = [[0, mx*100] for mx in stock_max_price]
         cash_in_hand_range = [[0, self.init_invest * 200]]
         print(stock_range + price_range + cash_in_hand_range)
+
         self.observation_space = spaces.MultiDiscrete(stock_range + price_range + cash_in_hand_range)
 
         # seed and start

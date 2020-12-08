@@ -34,14 +34,6 @@ def make_dir(directory):
 
 def get_data(dbars):
     """ Only for the close col """
-    # bbas3 = pd.read_csv('./datasets/BBAS3.csv', usecols=[col])
-    # bbdc4 = pd.read_csv('./datasets/BBDC4.csv', usecols=[col])
-    # itub4 = pd.read_csv('./datasets/ITUB4.csv', usecols=[col])
-    # petr4 = pd.read_csv('./datasets/PETR4.csv', usecols=[col])
-    # vale3 = pd.read_csv('./datasets/VALE3.csv', usecols=[col])
-    # for asset,df in dbars.items():
-    # df = generate_listed_companies_dataframe('./datasets/').drop(columns=[TIME_COLUMN_NAME,DATE_COLUMN_NAME])
-    # return np.array([bbas3[col], bbdc4[col], itub4[col], petr4[col], vale3[col]])
     df = reduce(lambda *args : pd.concat([args[0][['close']],args[1][['close']]],axis = 1),dbars.values())
     #print("AAAAAAAAa")
     #print(df)
@@ -70,3 +62,13 @@ def get_scaler(stock_price_history, init_invest, n_stock):
     scaler.fit([low, high])
 
     return scaler
+
+def get_returns_from(paths : list) -> dict :
+    dic = dict()
+    for path in paths:
+        series = pd.read_csv(path,sep=',',usecols=['equity'])['equity']
+        dic.update(dict(
+            path=path,
+            returns=series[len(series)-1]/series[0]-1
+        ))
+    return dic
