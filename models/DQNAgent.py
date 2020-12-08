@@ -26,12 +26,13 @@ class DQNAgentOperations(OperationsInterface):
         # data
         #train_data = np.around(get_data(dbars))
         train_data = get_data(dbars)
+        print(train_data)
         self.stock_price_history = train_data # round up to integer to reduce state space
         self.n_stock, self.n_step = self.stock_price_history.shape
         print(self.n_stock,self.n_step)
 
         # instance attributes
-        self.init_invest = START_MONEY
+        self.init_invest = self.b3.getBalance()
         self.cur_step = None
         self.stock_owned = None
         self.stock_price = None
@@ -42,7 +43,7 @@ class DQNAgentOperations(OperationsInterface):
         self.action_combo = [*map(list, itertools.product([0, 1, 2], repeat=self.n_stock))]
 
         # observation space: give estimates in order to sample and build scaler
-        stock_max_price = self.stock_price_history.max(axis=1)
+        stock_max_price = [100 for i in range(self.n_stock)]
         #stock_range = [[0, self.init_invest * 2 // mx] for mx in stock_max_price]
         stock_range = [[0,1000],[0,1000],[0,1000],[0,1000],[0,1000]] 
         price_range = [[0, mx*100] for mx in stock_max_price]
@@ -57,11 +58,12 @@ class DQNAgentOperations(OperationsInterface):
 
         state_size = self.observation_space.shape
         action_size = self.action_space.n
-        self.agent = QAgent(state_size, action_size).load('./weights/dqn')
+        self.agent = QAgent(state_size, action_size)
+        self.agent.load('./weights/dqn')
         self.scaler = get_scaler(self.stock_price_history, self.init_invest, self.n_stock)
 
         # parameters
-        # self.batch_size = 500
+        self.batch_size = 500
 
         # here we could have a variable called 'train'. If it is true we train, otherwise we load from weight file. 
         
@@ -88,7 +90,6 @@ class DQNAgentOperations(OperationsInterface):
 
     def trade(self, bts, dbars):
         print("Tradando for real")
-        print(bts)
         self.state = self.update_state(bts, dbars)
         print("Estado atual:", self.state)
         self.state = self.scaler.transform([self.state])
@@ -112,9 +113,9 @@ class DQNAgentOperations(OperationsInterface):
             orders.append(order)
         
         if len(buy_assets) != 0:
-            money=self.get_current_money()/len(buy_assets)
+            money=self.b3.getBalance()/len(buy_assets)
             for asset in buy_assets:
-                afford_shares = self.get_affordable_shares(dbars, asset=asset, money=money)
+                afford_shares = self.b3.getAfforShares(assetId=asset, money=money)
                 order=self.buy_order(asset,afford_shares)
                 orders.append(order)
 
@@ -152,12 +153,15 @@ class DQNAgentOperations(OperationsInterface):
     def get_obs(self):
         obs = []
         obs.extend(self.stock_owned)
-        obs.extend(self.stock_price*100)
+        for arr in self.stock_price:
+            obs.append(int(np.average(arr))*100)
         obs.append(self.cash_in_hand)
         return obs
 
 
     def get_val(self):
+        
+        self.stock_price = np.array([round(np.average(arr),2) for arr in self.stock_price])
         return np.sum(self.stock_owned * self.stock_price) + self.cash_in_hand 
     
 
