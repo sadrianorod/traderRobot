@@ -152,8 +152,7 @@ class DQNAgentOperations(OperationsInterface):
     def get_obs(self):
         obs = []
         obs.extend(self.stock_owned)
-        for arr in self.stock_price:
-            obs.extend(list(arr[]*100))
+        obs.extend(self.stock_price*100)
         obs.append(self.cash_in_hand)
         return obs
 
