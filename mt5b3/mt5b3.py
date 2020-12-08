@@ -526,10 +526,10 @@ def readBarsFile(fileName):
 def getBars(symbol, start,end=None,timeFrame=INTRADAY):
  # definimos o fuso horário como UTC
     #timezone = pytz.timezone("Etc/UTC")
-    print("timeFrame: ",timeFrame)
-    print("symbol: ",symbol)
-    print("start: ",start)
-    print("end: ",end)
+    #print("timeFrame: ",timeFrame)
+    #print("symbol: ",symbol)
+    #print("start: ",start)
+    #print("end: ",end)
     if not connected:
         print("In order to use this function, you must be connected to B3. Use function connect()")
         return
@@ -556,7 +556,7 @@ def getBars(symbol, start,end=None,timeFrame=INTRADAY):
             rates_frame=pd.DataFrame(rates)
             if len(rates_frame)>0:
                 rates_frame['time']=pd.to_datetime(rates_frame['time'], unit='s')
-            print("rates", rates_frame)
+            #print("rates", rates_frame)
             return rates_frame
     else:
         if type(end).__name__=='int':
@@ -567,7 +567,7 @@ def getBars(symbol, start,end=None,timeFrame=INTRADAY):
         rates_frame=pd.DataFrame(rates)
         if len(rates_frame)>0:
             rates_frame['time']=pd.to_datetime(rates_frame['time'], unit='s')
-        print("rates", rates_frame)
+        #print("rates", rates_frame)
         return rates_frame
 
 

@@ -43,6 +43,12 @@ def get_data(dbars):
     # df = generate_listed_companies_dataframe('./datasets/').drop(columns=[TIME_COLUMN_NAME,DATE_COLUMN_NAME])
     # return np.array([bbas3[col], bbdc4[col], itub4[col], petr4[col], vale3[col]])
     df = reduce(lambda *args : pd.concat([args[0][['close']],args[1][['close']]],axis = 1),dbars.values())
+    #print("AAAAAAAAa")
+    #print(df)
+    df.dropna(inplace=True)
+    #print(df*100)
+    # df = df*100
+    #print("AAEE")
     return df.T.to_numpy()
 
 def get_scaler(stock_price_history, init_invest, n_stock):

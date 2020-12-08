@@ -23,8 +23,9 @@ class DQNAgent(BackTestInterface):
     def setup(self, dbars):
         print("Setup")
         # data
-        train_data = np.around(get_data(dbars))
-        self.stock_price_history = np.around(train_data) # round up to integer to reduce state space
+        #train_data = np.around(get_data(dbars))
+        train_data = get_data(dbars)
+        self.stock_price_history = train_data # round up to integer to reduce state space
         self.n_stock, self.n_step = self.stock_price_history.shape
         print(self.n_stock,self.n_step)
 
@@ -41,9 +42,11 @@ class DQNAgent(BackTestInterface):
 
         # observation space: give estimates in order to sample and build scaler
         stock_max_price = self.stock_price_history.max(axis=1)
-        stock_range = [[0, self.init_invest * 2 // mx] for mx in stock_max_price]
-        price_range = [[0, mx] for mx in stock_max_price]
-        cash_in_hand_range = [[0, self.init_invest * 2]]
+        #stock_range = [[0, self.init_invest * 2 // mx] for mx in stock_max_price]
+        stock_range = [[0,1000],[0,1000],[0,1000],[0,1000],[0,1000]] 
+        price_range = [[0, mx*100] for mx in stock_max_price]
+        cash_in_hand_range = [[0, self.init_invest * 200]]
+        print(stock_range + price_range + cash_in_hand_range)
         self.observation_space = spaces.MultiDiscrete(stock_range + price_range + cash_in_hand_range)
 
         # seed and start
@@ -113,7 +116,7 @@ class DQNAgent(BackTestInterface):
                 order=self.buy_order(asset,afford_shares)
                 orders.append(order)
 
-        reward = self.get_reward()
+        reward = self.get_reward(action_vec)
         self.agent.remember(self.last_state, action, reward, self.state, False)
         self.last_state = self.state
 
@@ -147,7 +150,7 @@ class DQNAgent(BackTestInterface):
     def get_obs(self):
         obs = []
         obs.extend(self.stock_owned)
-        obs.extend(list(self.stock_price))
+        obs.extend(list(self.stock_price*100))
         obs.append(self.cash_in_hand)
         return obs
 
@@ -157,20 +160,28 @@ class DQNAgent(BackTestInterface):
     
 
     def train_get_reward(self, action):
+        action_vec = self.action_combo[action]
+        #print("action: ", action_vec)
         prev_val = self.get_val()
         self.stock_price = self.stock_price_history[:, self.cur_step] # update price
         self.train_trade(action)
         cur_val = self.get_val()
+        for a in action_vec:
+            if a==1:
+                cur_val -= 2000
         reward = cur_val - prev_val
 
         return reward
     
     
-    def get_reward(self):
+    def get_reward(self, action_vec):
         ##        np.sum(self.stock_owned * self.stock_price) + self.cash_in_hand 
         prev_val = np.sum(self.last_state[:5] * self.last_state[5:10]) + self.cash_in_hand 
 
         cur_val = self.get_val()
+        for a in action_vec:
+            if a==1:
+                cur_val -= 2000
         print("TOTAL:", cur_val)
         reward = cur_val - prev_val
 
@@ -219,6 +230,7 @@ class DQNAgent(BackTestInterface):
 
     
     def get_current_stock_prices(self, dbars, time):
-        stock_prices = np.around(get_data(dbars))
+        # stock_prices = np.around(get_data(dbars))
+        stock_prices = get_data(dbars)
         
         return stock_prices[:, time]
